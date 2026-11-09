@@ -2,7 +2,7 @@ import { FileMetrics, inc } from '../metrics';
 import { countLines } from './html';
 
 /** Quita comentarios y vacía las cadenas (pueden llevar «{», «;» o «.clase»). */
-function clean(text: string): { code: string; comments: number } {
+function clean(text: string, lineComments: boolean): { code: string; comments: number } {
   let comments = 0;
   let out = '';
   let i = 0;
@@ -12,6 +12,13 @@ function clean(text: string): { code: string; comments: number } {
       const end = text.indexOf('*/', i + 2);
       const stop = end === -1 ? text.length : end + 2;
       out += text.slice(i, stop).replace(/[^\n]/g, ' ');
+      comments++;
+      i = stop;
+    } else if (lineComments && c === '/' && text[i + 1] === '/' && (i === 0 || /[\s;{}]/.test(text[i - 1]))) {
+      // Comentario de línea de SCSS/Less (no «url(//…)»)
+      const end = text.indexOf('\n', i);
+      const stop = end === -1 ? text.length : end;
+      out += ' '.repeat(stop - i);
       comments++;
       i = stop;
     } else if (c === '"' || c === "'") {
@@ -46,9 +53,26 @@ function splitTopLevel(s: string): string[] {
 
 type Ctx = 'root' | 'style' | 'atBlock' | 'keyframes' | 'other';
 
-/** Analiza una hoja de estilo. Admite anidamiento nativo de CSS y @media/@supports/@layer. */
-export function analyzeCss(text: string): FileMetrics {
-  const { code, comments } = clean(text);
+const COLOR_RE = /#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\([^()]*\)/gi;
+const NAMED_COLORS = /\b(?:black|white|red|green|blue|yellow|orange|purple|pink|gray|grey|brown|cyan|magenta|navy|teal|olive|maroon|silver|gold|tomato|crimson|coral|salmon|indigo|violet|lime|aqua|fuchsia|beige|ivory|khaki|lavender|turquoise|rebeccapurple)\b/gi;
+
+/** Normaliza un color para contar los distintos: #FFF y #ffffff son el mismo. */
+function normColor(c: string): string {
+  const s = c.toLowerCase().replace(/\s+/g, '');
+  if (/^#[0-9a-f]{3,4}$/.test(s)) return '#' + [...s.slice(1)].map((x) => x + x).join('');
+  return s;
+}
+
+/**
+ * Analiza una hoja de estilo. Admite anidamiento nativo de CSS y @media/@supports/@layer.
+ * Con `syntax` «scss» o «less» también salta los comentarios de línea (//).
+ */
+export function analyzeCss(text: string, syntax: 'css' | 'scss' | 'less' = 'css'): FileMetrics {
+  const { code, comments } = clean(text, syntax !== 'css');
+  const colors: Record<string, number> = {};
+  const fonts: Record<string, number> = {};
+  let animations = 0;
+  let keyframes = 0;
   const stack: Ctx[] = ['root'];
   const classes: Record<string, number> = {};
   const idsMap: Record<string, number> = {};
@@ -63,7 +87,8 @@ export function analyzeCss(text: string): FileMetrics {
 
   const top = () => stack[stack.length - 1];
 
-  const declaration = (raw: string) => {
+  let bufStart = 0;
+  const declaration = (raw: string, end: number) => {
     const d = raw.trim();
     const colon = d.indexOf(':');
     if (colon <= 0 || top() !== 'style') return;
@@ -73,16 +98,33 @@ export function analyzeCss(text: string): FileMetrics {
     if (prop.startsWith('--')) customProperties++;
     if (/!\s*important/.test(value)) important++;
     if (prop === 'display') inc(display, value.replace(/\s*!\s*important/, ''));
+    if (prop === 'font-family') {
+      // Las cadenas están vaciadas en `code`: el nombre se lee del texto original (mismas posiciones).
+      const orig = text.slice(bufStart, end);
+      const first = orig.slice(orig.indexOf(':') + 1).split(',')[0]?.replace(/["']/g, '').replace(/\s*!\s*important/, '').trim().toLowerCase();
+      if (first && !/^(?:inherit|initial|unset|revert|var\(.*)$/.test(first)) inc(fonts, first);
+    }
+    if (/^(?:transition|animation|animation-name)$/.test(prop) && !/^(?:none|0s?|initial|unset)$/.test(value)) animations++;
+    {
+      for (const m of d.slice(colon + 1).matchAll(COLOR_RE)) inc(colors, normColor(m[0]));
+      if (/color|background|border|fill|stroke|shadow|outline|accent|caret/.test(prop) && !/^var\(/.test(value))
+        for (const m of value.matchAll(NAMED_COLORS)) inc(colors, m[0].toLowerCase());
+    }
   };
 
-  for (const ch of code) {
+  for (let i = 0; i < code.length; i++) {
+    const ch = code[i];
     if (ch === '{') {
       const prelude = buf.trim();
       buf = '';
+      bufStart = i + 1;
       if (prelude.startsWith('@')) {
         const name = prelude.slice(1).split(/[\s(]/)[0].toLowerCase();
         if (name === 'media') mediaQueries++;
-        if (name.endsWith('keyframes')) stack.push('keyframes');
+        if (name.endsWith('keyframes')) {
+          keyframes++;
+          stack.push('keyframes');
+        }
         else if (['media', 'supports', 'layer', 'container', 'scope', 'document'].includes(name))
           stack.push('atBlock');
         else stack.push(name === 'font-face' || name === 'page' ? 'style' : 'other');
@@ -97,11 +139,13 @@ export function analyzeCss(text: string): FileMetrics {
         stack.push('style');
       }
     } else if (ch === ';') {
-      declaration(buf);
+      declaration(buf, i);
       buf = '';
+      bufStart = i + 1;
     } else if (ch === '}') {
-      declaration(buf);
+      declaration(buf, i);
       buf = '';
+      bufStart = i + 1;
       if (stack.length > 1) stack.pop();
     } else {
       buf += ch;
@@ -123,6 +167,9 @@ export function analyzeCss(text: string): FileMetrics {
     mediaQueries: { value: mediaQueries },
     customProperties: { value: customProperties },
     important: { value: important },
+    colors: { value: Object.keys(colors).length, details: colors },
+    fontFamilies: { value: Object.keys(fonts).length, details: fonts },
+    animations: { value: animations + keyframes, details: { '@keyframes': keyframes, 'transition/animation': animations } },
     comments: { value: comments },
   };
 }

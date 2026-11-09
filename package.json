@@ -2,7 +2,7 @@
   "name": "web-code-stats",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "ceslava",
   "author": {
     "name": "ceslava"
@@ -42,7 +42,15 @@
     "grid",
     "code analysis",
     "informe",
-    "estadísticas"
+    "estadísticas",
+    "stack",
+    "framework",
+    "react",
+    "vue",
+    "vite",
+    "pwa",
+    "typescript",
+    "tailwind"
   ],
   "l10n": "./l10n",
   "main": "./out/extension.js",
@@ -99,6 +107,39 @@
           "description": "%config.language%",
           "order": 1
         },
+        "webReport.sections": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "insights",
+              "stack",
+              "pwa",
+              "pages",
+              "assets"
+            ],
+            "enumDescriptions": [
+              "%part.summary%",
+              "%part.insights%",
+              "%part.stack%",
+              "%part.pwa%",
+              "%part.pages%",
+              "%part.assets%"
+            ]
+          },
+          "default": [
+            "summary",
+            "insights",
+            "stack",
+            "pwa",
+            "pages",
+            "assets"
+          ],
+          "markdownDescription": "%config.sections%",
+          "order": 2
+        },
         "webReport.html.metrics": {
           "type": "array",
           "uniqueItems": true,
@@ -120,6 +161,8 @@
               "ids",
               "classesUsed",
               "inlineStyles",
+              "semanticTags",
+              "aria",
               "scripts",
               "comments"
             ],
@@ -139,6 +182,8 @@
               "%metric.html.ids%",
               "%metric.html.classesUsed%",
               "%metric.html.inlineStyles%",
+              "%metric.html.semanticTags%",
+              "%metric.html.aria%",
               "%metric.html.scripts%",
               "%metric.html.comments%"
             ]
@@ -151,10 +196,11 @@
             "images",
             "imagesWithoutAlt",
             "links",
-            "classesUsed"
+            "classesUsed",
+            "semanticTags"
           ],
           "markdownDescription": "%config.html.metrics%",
-          "order": 2
+          "order": 3
         },
         "webReport.html.tags": {
           "type": "array",
@@ -169,7 +215,7 @@
             "section"
           ],
           "markdownDescription": "%config.html.tags%",
-          "order": 3
+          "order": 4
         },
         "webReport.css.metrics": {
           "type": "array",
@@ -189,6 +235,9 @@
               "mediaQueries",
               "customProperties",
               "important",
+              "colors",
+              "fontFamilies",
+              "animations",
               "comments"
             ],
             "enumDescriptions": [
@@ -204,6 +253,9 @@
               "%metric.css.mediaQueries%",
               "%metric.css.customProperties%",
               "%metric.css.important%",
+              "%metric.css.colors%",
+              "%metric.css.fontFamilies%",
+              "%metric.css.animations%",
               "%metric.css.comments%"
             ]
           },
@@ -214,10 +266,11 @@
             "declarations",
             "displayFlex",
             "displayGrid",
-            "mediaQueries"
+            "mediaQueries",
+            "colors"
           ],
           "markdownDescription": "%config.css.metrics%",
-          "order": 4
+          "order": 5
         },
         "webReport.js.metrics": {
           "type": "array",
@@ -238,6 +291,10 @@
               "classes",
               "eventListeners",
               "imports",
+              "domQueries",
+              "fetchCalls",
+              "storage",
+              "tsTypes",
               "consoleCalls",
               "comments"
             ],
@@ -255,6 +312,10 @@
               "%metric.js.classes%",
               "%metric.js.eventListeners%",
               "%metric.js.imports%",
+              "%metric.js.domQueries%",
+              "%metric.js.fetchCalls%",
+              "%metric.js.storage%",
+              "%metric.js.tsTypes%",
               "%metric.js.consoleCalls%",
               "%metric.js.comments%"
             ]
@@ -267,7 +328,7 @@
             "eventListeners"
           ],
           "markdownDescription": "%config.js.metrics%",
-          "order": 5
+          "order": 6
         },
         "webReport.perFile": {
           "type": "boolean",

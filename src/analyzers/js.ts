@@ -198,6 +198,18 @@ export function analyzeJs(text: string): FileMetrics {
   const consoleCalls: Record<string, number> = {};
   for (const m of code.matchAll(/(?<![\w$.])console\.(\w+)\s*\(/g)) inc(consoleCalls, m[1]);
 
+  const dom: Record<string, number> = {};
+  for (const m of code.matchAll(/\.(querySelectorAll|querySelector|getElementById|getElementsByClassName|getElementsByTagName|createElement)\s*\(/g)) inc(dom, m[1]);
+  const net: Record<string, number> = {};
+  for (const m of code.matchAll(/(?<![\w$.])(fetch)\s*\(|(?<![\w$])(axios)(?:\.\w+)?\s*\(|new\s+(XMLHttpRequest|WebSocket|EventSource)\b/g))
+    inc(net, m[1] ?? m[2] ?? m[3]);
+  const storage: Record<string, number> = {};
+  for (const m of code.matchAll(/(?<![\w$])(localStorage|sessionStorage)\s*\.\s*(?:getItem|setItem|removeItem|clear)\b|(?<![\w$.])(indexedDB)\s*\.\s*open\b|(?<![\w$.])document\s*\.\s*(cookie)\b/g))
+    inc(storage, m[1] ?? m[2] ?? m[3]);
+  const ts: Record<string, number> = {};
+  for (const m of code.matchAll(/(?:^|[;{}\n])\s*(?:export\s+)?(?:declare\s+)?(?:const\s+)?(interface|type|enum)\s+[A-Za-z_$][\w$]*\s*(?:<[^=;{]*>)?\s*(?:=|\{|extends\b)/g))
+    inc(ts, m[1]);
+
   const variables = kinds.const + kinds.let + kinds.var;
   return {
     files: { value: 1 },
@@ -216,6 +228,10 @@ export function analyzeJs(text: string): FileMetrics {
     classes: { value: classes },
     eventListeners: { value: listeners },
     imports: { value: imports },
+    domQueries: { value: Object.values(dom).reduce((a, b) => a + b, 0), details: dom },
+    fetchCalls: { value: Object.values(net).reduce((a, b) => a + b, 0), details: net },
+    storage: { value: Object.values(storage).reduce((a, b) => a + b, 0), details: storage },
+    tsTypes: { value: Object.values(ts).reduce((a, b) => a + b, 0), details: ts },
     consoleCalls: { value: Object.values(consoleCalls).reduce((a, b) => a + b, 0), details: consoleCalls },
     comments: { value: comments },
   };

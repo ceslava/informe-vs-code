@@ -19,7 +19,7 @@ test('HTML: cuenta elementos, campos, imágenes y clases sin mirar comentarios, 
   assert.deepEqual(values(m), {
     files: 1, lines: 28, elements: 23, uniqueTags: 18, tags: 8, inputs: 3, buttons: 1, forms: 1,
     images: 2, imagesWithoutAlt: 1, links: 1, headings: 1, ids: 2, classesUsed: 4, inlineStyles: 1,
-    scripts: 2, comments: 1,
+    semanticTags: 3, aria: 0, scripts: 2, comments: 1,
   });
   assert.deepEqual(m.inputs.details, { text: 1, email: 1, checkbox: 1 });
   assert.deepEqual(m.tags.details, { input: 3, img: 2, a: 1, button: 1, section: 1 });
@@ -30,7 +30,8 @@ test('CSS: reglas, clases, display flex/grid, @media y anidamiento', () => {
   const m = analyzeCss(fixture('css/estilos.css'));
   assert.deepEqual(values(m), {
     files: 1, lines: 15, rules: 8, selectors: 9, classes: 6, ids: 1, declarations: 14,
-    displayFlex: 2, displayGrid: 1, mediaQueries: 1, customProperties: 2, important: 1, comments: 1,
+    displayFlex: 2, displayGrid: 1, mediaQueries: 1, customProperties: 2, important: 1, colors: 2, fontFamilies: 1,
+    animations: 1, comments: 1,
   });
   assert.ok(!('falsa' in (m.classes.details ?? {})), 'una clase dentro de una cadena no cuenta');
   assert.ok(!('comentada' in (m.classes.details ?? {})), 'una clase en un comentario no cuenta');
@@ -40,7 +41,8 @@ test('JS: variables (también desestructuradas y en for), funciones, clases y ev
   const m = analyzeJs(fixture('js/app.js'));
   assert.deepEqual(values(m), {
     files: 1, lines: 23, variables: 13, const: 8, let: 4, var: 1, functions: 7, functionDeclarations: 1,
-    arrowFunctions: 2, methods: 3, classes: 1, eventListeners: 1, imports: 1, consoleCalls: 2, comments: 1,
+    arrowFunctions: 2, methods: 3, classes: 1, eventListeners: 1, imports: 1, domQueries: 1, fetchCalls: 0, storage: 0,
+    tsTypes: 0, consoleCalls: 2, comments: 1,
   });
 });
 
