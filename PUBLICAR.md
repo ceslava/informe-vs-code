@@ -27,7 +27,7 @@ Hay dos caminos. El primero no necesita tokens ni GitHub Actions.
    git tag v0.1.0 && git push origin v0.1.0
    ```
 
-   El flujo `publicar.yml` pasa las pruebas, crea una versión en GitHub con el `.vsix` y, si existe el secreto,
+   También se puede lanzar sin etiqueta: Actions → Publicar → Run workflow. El flujo `publicar.yml` pasa las pruebas, crea una versión en GitHub con el `.vsix` y, si existe el secreto,
    publica en el Marketplace.
 
 ## Descargar el `.vsix` sin compilar
