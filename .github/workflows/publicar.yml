@@ -36,7 +36,8 @@ jobs:
       - run: xvfb-run -a npm run test:integration
       - run: npm run package
       - name: Versión en GitHub con el .vsix
-        run: gh release create "$TAG" *.vsix --target "$GITHUB_SHA" --title "Web Code Stats $TAG" --notes "Descarga el .vsix de abajo e instálalo en VS Code (Extensiones → … → Instalar desde VSIX) o súbelo al Marketplace. Cambios: CHANGELOG.md."
+        run: |
+          gh release create "$TAG" *.vsix --target "$GITHUB_SHA" --title "Web Code Stats $TAG" --notes "Descarga el .vsix de abajo e instálalo en VS Code (Extensiones → … → Instalar desde VSIX) o súbelo al Marketplace. Cambios: CHANGELOG.md."
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Marketplace de VS Code
