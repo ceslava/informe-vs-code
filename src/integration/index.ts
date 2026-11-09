@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import type { WebReportApi } from '../extension';
 
 export async function run(): Promise<void> {
-  const ext = vscode.extensions.getExtension<WebReportApi>('ceslava.informe-web');
+  const ext = vscode.extensions.getExtension<WebReportApi>('ceslava.web-code-stats');
   assert.ok(ext, 'la extensión no está cargada');
   const api = await ext.activate();
 

@@ -1,5 +1,5 @@
 {
-  "name": "informe-web",
+  "name": "web-code-stats",
   "displayName": "%displayName%",
   "description": "%description%",
   "version": "0.1.0",
@@ -34,13 +34,15 @@
     "html",
     "css",
     "javascript",
+    "stats",
+    "statistics",
     "report",
     "metrics",
-    "statistics",
     "flexbox",
+    "grid",
+    "code analysis",
     "informe",
-    "estadísticas",
-    "web"
+    "estadísticas"
   ],
   "l10n": "./l10n",
   "main": "./out/extension.js",

@@ -13,7 +13,7 @@ async function main(): Promise<void> {
       '--disable-extensions',
       '--disable-workspace-trust',
       // Perfil temporal: los ajustes que cambian las pruebas no quedan en tu VS Code.
-      `--user-data-dir=${mkdtempSync(join(tmpdir(), 'vscode-informe-web-'))}`,
+      `--user-data-dir=${mkdtempSync(join(tmpdir(), 'vscode-web-code-stats-'))}`,
     ],
   });
 }

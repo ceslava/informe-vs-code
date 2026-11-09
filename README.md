@@ -1,4 +1,6 @@
-# Informe del proyecto web · Web Project Report
+# Web Code Stats: HTML, CSS & JS Report
+
+*Informe del proyecto web*
 
 Extensión de VS Code que cuenta lo que elijas en los ficheros HTML, CSS y JavaScript de un proyecto y
 crea un informe con autor, en español o en inglés. *English below.*
@@ -55,11 +57,11 @@ Ejemplo de `.vscode/settings.json`:
 npm install
 npm test                  # analizadores, informe y traducciones (Node, sin VS Code)
 npm run test:integration  # dentro de un VS Code real (en Linux sin pantalla: xvfb-run -a npm run test:integration)
-npm run package           # crea informe-web-0.1.0.vsix
+npm run package           # crea web-code-stats-0.1.0.vsix
 ```
 
 `F5` en VS Code abre una ventana de prueba con `test-fixtures/`. Instalar el `.vsix`: Extensiones → `…` →
-*Instalar desde VSIX*, o `code --install-extension informe-web-0.1.0.vsix`.
+*Instalar desde VSIX*, o `code --install-extension web-code-stats-0.1.0.vsix`.
 
 Los conteos salen de un análisis léxico propio (sin dependencias): fiables con código normal, aproximados en
 casos raros.
@@ -71,11 +73,11 @@ with an author, in English or Spanish.
 
 ![Report in English with a light theme](images/informe-en.png)
 
-- **Web Report: Choose metrics and generate report**: pick what to count (elements, inputs, specific tags,
+- **Web Code Stats: Choose metrics and generate report**: pick what to count (elements, inputs, specific tags,
   classes, `display: flex`, `display: grid`, `@media`, variables, functions, event listeners…). Saved to the
   workspace settings.
-- **Web Report: Set report author**: your name in the report header.
-- **Web Report: Generate report** (or right-click a folder in the Explorer): opens the report with buttons to save
+- **Web Code Stats: Set report author**: your name in the report header.
+- **Web Code Stats: Generate report** (or right-click a folder in the Explorer): opens the report with buttons to save
   it as Markdown or HTML, copy it, change the author or refresh it.
 
 Settings: `webReport.author`, `webReport.language` (`auto`, `en`, `es`), `webReport.{html,css,js}.metrics` (empty
