@@ -1,0 +1,313 @@
+{
+  "name": "informe-web",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "version": "0.1.0",
+  "publisher": "ceslava",
+  "author": {
+    "name": "ceslava"
+  },
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#0b4f8a",
+    "theme": "dark"
+  },
+  "pricing": "Free",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ceslava/informe-vs-code.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ceslava/informe-vs-code/issues"
+  },
+  "homepage": "https://github.com/ceslava/informe-vs-code#readme",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other",
+    "Education",
+    "Linters"
+  ],
+  "keywords": [
+    "html",
+    "css",
+    "javascript",
+    "report",
+    "metrics",
+    "statistics",
+    "flexbox",
+    "informe",
+    "estadísticas",
+    "web"
+  ],
+  "l10n": "./l10n",
+  "main": "./out/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "webReport.generate",
+        "title": "%command.generate%",
+        "category": "%category%"
+      },
+      {
+        "command": "webReport.chooseMetrics",
+        "title": "%command.chooseMetrics%",
+        "category": "%category%"
+      },
+      {
+        "command": "webReport.setAuthor",
+        "title": "%command.setAuthor%",
+        "category": "%category%"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "webReport.generate",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@90"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "%category%",
+      "properties": {
+        "webReport.author": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "%config.author%",
+          "order": 0
+        },
+        "webReport.language": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "en",
+            "es"
+          ],
+          "enumDescriptions": [
+            "%config.language.auto%",
+            "%config.language.en%",
+            "%config.language.es%"
+          ],
+          "default": "auto",
+          "description": "%config.language%",
+          "order": 1
+        },
+        "webReport.html.metrics": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "files",
+              "lines",
+              "elements",
+              "uniqueTags",
+              "tags",
+              "inputs",
+              "buttons",
+              "forms",
+              "images",
+              "imagesWithoutAlt",
+              "links",
+              "headings",
+              "ids",
+              "classesUsed",
+              "inlineStyles",
+              "scripts",
+              "comments"
+            ],
+            "enumDescriptions": [
+              "%metric.html.files%",
+              "%metric.html.lines%",
+              "%metric.html.elements%",
+              "%metric.html.uniqueTags%",
+              "%metric.html.tags%",
+              "%metric.html.inputs%",
+              "%metric.html.buttons%",
+              "%metric.html.forms%",
+              "%metric.html.images%",
+              "%metric.html.imagesWithoutAlt%",
+              "%metric.html.links%",
+              "%metric.html.headings%",
+              "%metric.html.ids%",
+              "%metric.html.classesUsed%",
+              "%metric.html.inlineStyles%",
+              "%metric.html.scripts%",
+              "%metric.html.comments%"
+            ]
+          },
+          "default": [
+            "files",
+            "elements",
+            "tags",
+            "inputs",
+            "images",
+            "imagesWithoutAlt",
+            "links",
+            "classesUsed"
+          ],
+          "markdownDescription": "%config.html.metrics%",
+          "order": 2
+        },
+        "webReport.html.tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "input",
+            "img",
+            "a",
+            "button",
+            "section"
+          ],
+          "markdownDescription": "%config.html.tags%",
+          "order": 3
+        },
+        "webReport.css.metrics": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "files",
+              "lines",
+              "rules",
+              "selectors",
+              "classes",
+              "ids",
+              "declarations",
+              "displayFlex",
+              "displayGrid",
+              "mediaQueries",
+              "customProperties",
+              "important",
+              "comments"
+            ],
+            "enumDescriptions": [
+              "%metric.css.files%",
+              "%metric.css.lines%",
+              "%metric.css.rules%",
+              "%metric.css.selectors%",
+              "%metric.css.classes%",
+              "%metric.css.ids%",
+              "%metric.css.declarations%",
+              "%metric.css.displayFlex%",
+              "%metric.css.displayGrid%",
+              "%metric.css.mediaQueries%",
+              "%metric.css.customProperties%",
+              "%metric.css.important%",
+              "%metric.css.comments%"
+            ]
+          },
+          "default": [
+            "files",
+            "rules",
+            "classes",
+            "declarations",
+            "displayFlex",
+            "displayGrid",
+            "mediaQueries"
+          ],
+          "markdownDescription": "%config.css.metrics%",
+          "order": 4
+        },
+        "webReport.js.metrics": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "files",
+              "lines",
+              "variables",
+              "const",
+              "let",
+              "var",
+              "functions",
+              "functionDeclarations",
+              "arrowFunctions",
+              "methods",
+              "classes",
+              "eventListeners",
+              "imports",
+              "consoleCalls",
+              "comments"
+            ],
+            "enumDescriptions": [
+              "%metric.js.files%",
+              "%metric.js.lines%",
+              "%metric.js.variables%",
+              "%metric.js.const%",
+              "%metric.js.let%",
+              "%metric.js.var%",
+              "%metric.js.functions%",
+              "%metric.js.functionDeclarations%",
+              "%metric.js.arrowFunctions%",
+              "%metric.js.methods%",
+              "%metric.js.classes%",
+              "%metric.js.eventListeners%",
+              "%metric.js.imports%",
+              "%metric.js.consoleCalls%",
+              "%metric.js.comments%"
+            ]
+          },
+          "default": [
+            "files",
+            "variables",
+            "functions",
+            "classes",
+            "eventListeners"
+          ],
+          "markdownDescription": "%config.js.metrics%",
+          "order": 5
+        },
+        "webReport.perFile": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.perFile%",
+          "order": 10
+        },
+        "webReport.exclude": {
+          "type": "string",
+          "default": "**/{node_modules,dist,out,build,.git,.vscode-test}/**",
+          "markdownDescription": "%config.exclude%",
+          "order": 11
+        },
+        "webReport.ignoreMinified": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "%config.ignoreMinified%",
+          "order": 12
+        },
+        "webReport.maxFiles": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 1,
+          "description": "%config.maxFiles%",
+          "order": 13
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "test": "npm run compile && node --test out/test/*.test.js",
+    "package": "vsce package --no-dependencies",
+    "test:integration": "npm run compile && node out/integration/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.4.0"
+  }
+}

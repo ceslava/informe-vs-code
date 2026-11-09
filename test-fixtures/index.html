@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Refugio</title>
+  <link rel="stylesheet" href="css/estilos.css">
+  <style>.oculto { display: none; } /* <div> no cuenta */</style>
+</head>
+<body>
+  <!-- <section> comentada: no cuenta -->
+  <header class="cabecera fija"><h1>Refugio de gatos</h1></header>
+  <main id="contenido">
+    <section class="tarjetas">
+      <img src="gato.jpg" alt="Gato atigrado">
+      <img src="perro.jpg">
+      <a href="adoptar.html" class="boton">Adoptar</a>
+    </section>
+    <form>
+      <label>Nombre <input name="nombre" required></label>
+      <label>Correo <input type="email" name="correo"></label>
+      <input type="checkbox" id="acepto" style="margin: 0">
+      <button type="submit" class="boton" data-x="a > b">Enviar</button>
+    </form>
+  </main>
+  <script src="js/app.js"></script>
+  <script>if (1 < 2) { document.write("<p>no cuenta</p>"); }</script>
+</body>
+</html>

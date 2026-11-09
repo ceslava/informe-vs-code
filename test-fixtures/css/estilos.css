@@ -1,0 +1,15 @@
+/* .comentada { display: flex } */
+:root { --acento: #c25; --hueco: 1rem; }
+.tarjetas, .lista > li { display: flex; gap: var(--hueco); }
+.cabecera.fija { position: sticky; top: 0; }
+#contenido { display: grid !important; grid-template-columns: 1fr 1fr; }
+.boton::after { content: "{ .falsa; }"; }
+.menu {
+  display: inline-flex;
+  &:hover { color: red; }
+}
+@media (width < 40rem) {
+  .tarjetas { display: block; }
+}
+@keyframes latido { from { scale: 1; } 50% { scale: 1.1; } to { scale: 1; } }
+@font-face { font-family: "Mia"; src: url(mia.woff2); }

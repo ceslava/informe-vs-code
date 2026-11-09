@@ -1,0 +1,14 @@
+src/**
+out/test/**
+**/*.map
+**/*.ts
+tsconfig.json
+.vscode/**
+node_modules/**
+test-fixtures/**
+out/integration/**
+images/icon.svg
+.github/**
+PUBLICAR.md
+.gitignore
+package-lock.json
