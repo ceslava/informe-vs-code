@@ -7,7 +7,7 @@ Hay dos caminos. El primero no necesita tokens ni GitHub Actions.
 1. Entra en <https://marketplace.visualstudio.com/manage> con una cuenta de Microsoft.
 2. **Create publisher**: el ID debe ser exactamente el `publisher` de `package.json` (`ceslava`). Si ese ID ya
    está cogido, elige otro y cámbialo en `package.json` (y en `src/integration/index.ts`, que usa `ceslava.web-code-stats`).
-3. Genera el paquete: `npm ci && npm run package` → `web-code-stats-0.1.0.vsix`.
+3. Genera el paquete: `npm ci && npm run package` → `web-code-stats-0.2.0.vsix`.
 4. En la página del publisher: **New extension → Visual Studio Code** y sube el `.vsix`. La revisión tarda unos
    minutos; después sale en <https://marketplace.visualstudio.com/items?itemName=ceslava.web-code-stats>.
 5. Para una versión nueva: sube `version` en `package.json`, añade una entrada en `CHANGELOG.md`, vuelve a
@@ -24,7 +24,7 @@ Hay dos caminos. El primero no necesita tokens ni GitHub Actions.
 4. Sube la versión en `package.json`, anótala en `CHANGELOG.md`, haz commit y crea la etiqueta:
 
    ```bash
-   git tag v0.1.0 && git push origin v0.1.0
+   git tag v0.2.0 && git push origin v0.2.0
    ```
 
    También se puede lanzar sin etiqueta: Actions → Publicar → Run workflow. El flujo `publicar.yml` pasa las pruebas, crea una versión en GitHub con el `.vsix` y, si existe el secreto,

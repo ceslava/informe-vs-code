@@ -17,6 +17,8 @@ export function countLines(text: string): number {
   return text.split(/\r?\n/).filter((l) => l.trim() !== '').length;
 }
 
+const SEMANTIC = new Set(['header', 'nav', 'main', 'article', 'section', 'aside', 'footer', 'figure', 'figcaption', 'time', 'address', 'search', 'dialog', 'details', 'summary']);
+
 /**
  * Analiza un HTML. Es un análisis léxico, no un parser completo: ignora
  * comentarios y el contenido de <script>, <style>, <template> no se trata aparte.
@@ -42,6 +44,8 @@ export function analyzeHtml(text: string, tagsToCount: readonly string[]): FileM
   let imagesWithoutAlt = 0;
   let ids = 0;
   let inlineStyles = 0;
+  const semantic: Record<string, number> = {};
+  const aria: Record<string, number> = {};
 
   for (const m of src.matchAll(TAG_RE)) {
     const tag = m[1].toLowerCase();
@@ -55,6 +59,8 @@ export function analyzeHtml(text: string, tagsToCount: readonly string[]): FileM
     if (/^h[1-6]$/.test(tag)) inc(headings, tag);
     if ('id' in attrs) ids++;
     if ('style' in attrs) inlineStyles++;
+    if (SEMANTIC.has(tag)) inc(semantic, tag);
+    for (const a of Object.keys(attrs)) if (a === 'role' || a.startsWith('aria-')) inc(aria, a);
     if (attrs.class) for (const c of attrs.class.split(/\s+/).filter(Boolean)) inc(classes, c);
   }
 
@@ -76,6 +82,8 @@ export function analyzeHtml(text: string, tagsToCount: readonly string[]): FileM
     ids: { value: ids },
     classesUsed: { value: Object.keys(classes).length, details: classes },
     inlineStyles: { value: inlineStyles },
+    semanticTags: { value: Object.values(semantic).reduce((a, b) => a + b, 0), details: semantic },
+    aria: { value: Object.values(aria).reduce((a, b) => a + b, 0), details: aria },
     scripts: { value: n('script') },
     comments: { value: comments },
   };

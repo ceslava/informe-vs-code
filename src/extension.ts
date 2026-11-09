@@ -1,17 +1,11 @@
 import * as vscode from 'vscode';
-import { analyzeCss } from './analyzers/css';
-import { analyzeHtml } from './analyzers/html';
-import { analyzeJs } from './analyzers/js';
-import { resolveLocale, STRINGS } from './i18n';
-import { aggregate, DEFAULT_HTML_TAGS, defaultMetrics, FileMetrics, Language, LANGUAGES, METRICS } from './metrics';
-import { orderMetrics, renderHtml, renderMarkdown, ReportData, SectionData } from './report';
+import { REPORT_PARTS, ReportPart, resolveLocale, STRINGS } from './i18n';
+import { DEFAULT_HTML_TAGS, defaultMetrics, Language, LANGUAGES, METRICS } from './metrics';
+import { orderMetrics, orderParts, renderHtml, renderMarkdown, ReportData } from './report';
+import { scanProject } from './scan';
 
 const SECTION = 'webReport';
-const GLOBS: Record<Language, string> = {
-  html: '**/*.{html,htm}',
-  css: '**/*.css',
-  js: '**/*.{js,mjs,cjs}',
-};
+const MAX_TEXT = 2 * 1024 * 1024;
 
 let panel: vscode.WebviewPanel | undefined;
 let lastReport: ReportData | undefined;
@@ -90,8 +84,13 @@ async function chooseMetrics(context: vscode.ExtensionContext): Promise<void> {
   const cfg = config();
   const locale = resolveLocale(cfg.get('language', 'auto'), vscode.env.language);
   const t = STRINGS[locale];
-  type Item = vscode.QuickPickItem & { lang?: Language; id?: string };
+  type Item = vscode.QuickPickItem & { lang?: Language; id?: string; part?: ReportPart };
   const items: Item[] = [];
+  const parts = new Set(cfg.get<string[]>('sections', [...REPORT_PARTS]));
+  items.push({ label: vscode.l10n.t('Report sections'), kind: vscode.QuickPickItemKind.Separator });
+  for (const p of REPORT_PARTS) {
+    items.push({ label: t.parts[p], description: t.partHints[p], picked: parts.has(p), part: p });
+  }
   for (const lang of LANGUAGES) {
     const chosen = new Set(cfg.get<string[]>(`${lang}.metrics`, defaultMetrics(lang)));
     items.push({ label: t.sections[lang], kind: vscode.QuickPickItemKind.Separator });
@@ -106,8 +105,9 @@ async function chooseMetrics(context: vscode.ExtensionContext): Promise<void> {
     matchOnDescription: true,
   });
   if (!picked) return;
+  await cfg.update('sections', orderParts(picked.filter((p) => p.part).map((p) => p.part!)), target());
   for (const lang of LANGUAGES) {
-    const ids = picked.filter((p) => p.lang === lang).map((p) => p.id!);
+    const ids = picked.filter((p) => p.lang === lang && p.id).map((p) => p.id!);
     await cfg.update(`${lang}.metrics`, ids, target());
   }
   if (picked.some((p) => p.lang === 'html' && p.id === 'tags')) {
@@ -135,31 +135,60 @@ async function generate(context: vscode.ExtensionContext, uri?: vscode.Uri): Pro
   const maxFiles = cfg.get<number>('maxFiles', 2000);
   const tags = cfg.get<string[]>('html.tags', DEFAULT_HTML_TAGS);
 
-  const report = await vscode.window.withProgress(
+  const parts = orderParts(cfg.get<string[]>('sections', [...REPORT_PARTS]));
+  const chosen = Object.fromEntries(
+    LANGUAGES.map((l) => [l, orderMetrics(l, cfg.get<string[]>(`${l}.metrics`, defaultMetrics(l)))]),
+  ) as Record<Language, string[]>;
+
+  const result = await vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title: vscode.l10n.t('Analyzing web files…'), cancellable: true },
     async (progress, token) => {
-      const sections: SectionData[] = [];
-      for (const lang of LANGUAGES) {
-        const metrics = orderMetrics(lang, cfg.get<string[]>(`${lang}.metrics`, defaultMetrics(lang)));
-        if (metrics.length === 0) continue;
-        progress.report({ message: STRINGS[locale].sections[lang] });
-        let uris = await vscode.workspace.findFiles(new vscode.RelativePattern(folder, GLOBS[lang]), exclude, maxFiles, token);
-        if (skipMin) uris = uris.filter((u) => !/\.min\.\w+$/.test(u.path));
-        uris.sort((a, b) => a.path.localeCompare(b.path));
-        const files: SectionData['files'] = [];
-        for (const u of uris) {
+      // 1. Todos los ficheros del proyecto (para el inventario y el stack), con su tamaño.
+      progress.report({ message: vscode.l10n.t('Listing files') });
+      const limit = maxFiles * 5;
+      const uris = await vscode.workspace.findFiles(new vscode.RelativePattern(folder, '**/*'), exclude, limit + 1, token);
+      const truncated = uris.length > limit;
+      uris.length = Math.min(uris.length, limit);
+      uris.sort((a, b) => a.path.localeCompare(b.path));
+      const files = uris.map((u) => ({ uri: u, path: relative(folder, u), size: 0 }));
+      if (parts.includes('assets') || parts.includes('summary')) {
+        for (let i = 0; i < files.length; i += 64) {
           if (token.isCancellationRequested) return undefined;
-          const text = new TextDecoder('utf-8').decode(await vscode.workspace.fs.readFile(u));
-          const m: FileMetrics = lang === 'html' ? analyzeHtml(text, tags) : lang === 'css' ? analyzeCss(text) : analyzeJs(text);
-          files.push({ path: relative(folder, u), metrics: m });
+          await Promise.all(
+            files.slice(i, i + 64).map(async (f) => {
+              try {
+                f.size = (await vscode.workspace.fs.stat(f.uri)).size;
+              } catch {
+                /* fichero que ya no existe */
+              }
+            }),
+          );
         }
-        sections.push({ lang, metrics, total: aggregate(lang, files.map((f) => f.metrics)), files });
       }
-      return sections;
+      const read = async (u: vscode.Uri, size: number): Promise<string | undefined> => {
+        if (size > MAX_TEXT) return undefined;
+        try {
+          return new TextDecoder('utf-8').decode(await vscode.workspace.fs.readFile(u));
+        } catch {
+          return undefined;
+        }
+      };
+
+      progress.report({ message: vscode.l10n.t('Analyzing code') });
+      return scanProject(files, {
+        chosen,
+        tags,
+        skipMinified: skipMin,
+        maxFiles,
+        truncated,
+        read: (f) => read(f.uri, f.size),
+        progress: (n, total) => progress.report({ message: `${n}/${total}` }),
+        cancelled: () => token.isCancellationRequested,
+      });
     },
   );
-  if (!report) return;
-  if (report.length === 0) {
+  if (!result) return;
+  if (result.sections.length === 0 && parts.length === 0) {
     const choose = vscode.l10n.t('Choose metrics');
     const answer = await vscode.window.showWarningMessage(vscode.l10n.t('No metrics are selected.'), choose);
     if (answer === choose) await chooseMetrics(context);
@@ -171,7 +200,8 @@ async function generate(context: vscode.ExtensionContext, uri?: vscode.Uri): Pro
     date: new Date(),
     locale,
     perFile: cfg.get<boolean>('perFile', true),
-    sections: report,
+    parts,
+    ...result,
   };
   showReport(lastReport);
 }
